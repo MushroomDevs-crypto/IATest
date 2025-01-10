@@ -56,14 +56,14 @@ class TwitterBot:
         return response
 
     def handle_mentions(self):
-        # Get mentions from last hour
-        start_time = datetime.utcnow() - timedelta(hours=1)
+      
+        # Get only the most recent mention
         mentions = self.twitter_api.get_users_mentions(
             id=self.me_id,
-            start_time=start_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            max_results=1,
             tweet_fields=['created_at']
         ).data
-
+       
         print(f"Mentions retrieved: {mentions.data if mentions else 'None'}")
 
         if not mentions:
