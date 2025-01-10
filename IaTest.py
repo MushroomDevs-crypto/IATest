@@ -64,6 +64,8 @@ class TwitterBot:
             tweet_fields=['created_at']
         ).data
 
+        print(f"Mentions retrieved: {mentions.data if mentions else 'None'}")
+
         if not mentions:
             return
 
@@ -72,11 +74,12 @@ class TwitterBot:
             if mention.id not in self.processed_mentions:
                 try:
                     response = self.generate_response(mention.text)
+                    print(f"Generated response: {response}")
                     self.twitter_api.create_tweet(
                         text=response,
                         in_reply_to_tweet_id=mention.id
                     )
-                    
+                    print(f"Successfully replied to mention {mention.id}")
                     # Add to processed mentions
                     self.processed_mentions.add(mention.id)
                     
