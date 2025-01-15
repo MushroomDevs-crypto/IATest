@@ -19,6 +19,8 @@ TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN", "YourKey")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "YourKey")
 
 
+
+
 class TwitterBot:
     def __init__(self):
         self.twitter_api = tweepy.Client(
@@ -34,27 +36,7 @@ class TwitterBot:
         self.processed_mentions = set()  # Store processed mention IDs in memory
 
     def generate_response(self, tweet_text):
-        system_template = """
-        You are a witty and sarcastic tech enthusiast who loves to make predictions about the future.
-        Your responses should be:
-        - Humorous but insightful
-        - Limited to 240 characters
-        - Include at least one tech-related reference
-        - End with a bold prediction
-        
-        If you can't make a prediction, respond with "My crystal ball needs debugging 🔧"
-        """
-        
-        human_template = "{text}"
-        
-        chat_prompt = ChatPromptTemplate.from_messages([
-            SystemMessagePromptTemplate.from_template(system_template),
-            HumanMessagePromptTemplate.from_template(human_template)
-        ])
-        
-        messages = chat_prompt.format_prompt(text=tweet_text).to_messages()
-        response = self.llm(messages).content
-        return response
+         return "Hello World"
 
     def handle_mentions(self):
       
