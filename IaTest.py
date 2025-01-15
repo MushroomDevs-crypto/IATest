@@ -1,65 +1,100 @@
 import tweepy
+from datetime import datetime, timedelta
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
+import schedule
+import time
 import os
-import sys
 
-# Set up API credentials from environment variables
-api_key = os.getenv("TWITTER_API_KEY")
-api_secret = os.getenv("TWITTER_API_SECRET")
-access_token = os.getenv("TWITTER_ACCESS_TOKEN")
-access_token_secret = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
-bearer_token = os.getenv("TWITTER_BEARER_TOKEN")
+# Helpful when testing locally
+from dotenv import load_dotenv
+load_dotenv()
 
-# Validate credentials
-if not all([api_key, api_secret, access_token, access_token_secret, bearer_token]):
-    print("Error: Missing Twitter API credentials. Please check your environment variables.")
-    sys.exit(1)
-
-try:
-    # Set up Twitter client
-    client = tweepy.Client(
-        bearer_token=bearer_token,
-        consumer_key=api_key,
-        consumer_secret=api_secret,
-        access_token=access_token,
-        access_token_secret=access_token_secret,
-        wait_on_rate_limit=True
-    )
-
-    # Verify credentials
-    client.get_me()
-except tweepy.errors.Unauthorized:
-    print("Error: Invalid credentials. Please check your Twitter API keys and tokens.")
-    print("Make sure you have created a project in the Twitter Developer Portal.")
-    sys.exit(1)
-except Exception as e:
-    print(f"Error during authentication: {e}")
-    sys.exit(1)
+# Load API keys from environment variables
+TWITTER_API_KEY = os.getenv("TWITTER_API_KEY", "YourKey")
+TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET", "YourKey") 
+TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN", "YourKey")
+TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET", "YourKey")
+TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN", "YourKey")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "YourKey")
 
 
-class MyStreamListener(tweepy.StreamingClient):
-    def on_tweet(self, tweet):
-        try:
-            # Get the tweet that mentioned the bot
-            mentioned_tweet = client.get_tweet(tweet.id)
-            
-            # Reply to the tweet
-            client.create_tweet(
-                text="Hello World",
-                in_reply_to_tweet_id=tweet.id
-            )
-        except Exception as e:
-            print(f"Error: {e}")
+class TwitterBot:
+    def __init__(self):
+        self.twitter_api = tweepy.Client(
+            bearer_token=TWITTER_BEARER_TOKEN,
+            consumer_key=TWITTER_API_KEY,
+            consumer_secret=TWITTER_API_SECRET,
+            access_token=TWITTER_ACCESS_TOKEN,
+            access_token_secret=TWITTER_ACCESS_TOKEN_SECRET,
+            wait_on_rate_limit=True
+        )
+        self.llm = ChatOpenAI(temperature=0.7, openai_api_key=OPENAI_API_KEY, model_name="gpt-3.5-turbo")
+        self.me_id = self.twitter_api.get_me()[0].id
+        self.processed_mentions = set()  # Store processed mention IDs in memory
 
-# Initialize stream
-stream = MyStreamListener(bearer_token)
+    def generate_response(self, tweet_text):
+        system_template = """
+        You are a witty and sarcastic tech enthusiast who loves to make predictions about the future.
+        Your responses should be:
+        - Humorous but insightful
+        - Limited to 240 characters
+        - Include at least one tech-related reference
+        - End with a bold prediction
+        
+        If you can't make a prediction, respond with "My crystal ball needs debugging 🔧"
+        """
+        
+        human_template = "{text}"
+        
+        chat_prompt = ChatPromptTemplate.from_messages([
+            SystemMessagePromptTemplate.from_template(system_template),
+            HumanMessagePromptTemplate.from_template(human_template)
+        ])
+        
+        messages = chat_prompt.format_prompt(text=tweet_text).to_messages()
+        response = self.llm(messages).content
+        return response
 
-# Add rule to track mentions
-# Replace USERNAME with your bot's username
-stream.add_rules(tweepy.StreamRule("@Mushroomdevs"))
+    def handle_mentions(self):
+      
+        # Get only the most recent mention
+        mentions = self.twitter_api.get_users_mentions(
+            id=self.me_id,
+            max_results=1,
+            tweet_fields=['created_at']
+        ).data
+       
+        print(f"Mentions retrieved: {mentions.data if mentions else 'None'}")
 
-# Start streaming
-stream.filter()
+        if not mentions:
+            return
 
+        for mention in mentions:
+            # Check if we've already processed this mention
+            if mention.id not in self.processed_mentions:
+                try:
+                    response = self.generate_response(mention.text)
+                    print(f"Generated response: {response}")
+                    self.twitter_api.create_tweet(
+                        text=response,
+                        in_reply_to_tweet_id=mention.id
+                    )
+                    print(f"Successfully replied to mention {mention.id}")
+                    # Add to processed mentions
+                    self.processed_mentions.add(mention.id)
+                    
+                except Exception as e:
+                    print(f"Error handling mention {mention.id}: {str(e)}")
 
+def main():
+    bot = TwitterBot()
+    schedule.every(5).minutes.do(bot.handle_mentions)
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
+if __name__ == "__main__":
+    main()
 
