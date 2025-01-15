@@ -2,11 +2,11 @@ import tweepy
 import os
 
 # Set up API credentials from environment variables
-api_key = os.getenv("API_KEY")
-api_secret = os.getenv("API_SECRET")
-access_token = os.getenv("ACCESS_TOKEN")
-access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
-bearer_token = os.getenv("BEARER_TOKEN")
+api_key = os.getenv("TWITTER_API_KEY")
+api_secret = os.getenv("TWITTER_API_SECRET")
+access_token = os.getenv("TWITTER_ACCESS_TOKEN")
+access_token_secret = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
+bearer_token = os.getenv("TWITTER_BEARER_TOKEN")
 
 # Set up Twitter client
 client = tweepy.Client(
