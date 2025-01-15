@@ -38,7 +38,7 @@ def reply_to_mentions():
     print("Buscando menções...")
     try:
         # Obtém as últimas 20 menções
-        mentions = client.get_users_mentions(user_id, max_results=20)
+        mentions = client.get_users_mentions(user_id, max_results=1)
 
         if mentions and mentions.data:
             print(f"{len(mentions.data)} menções encontradas.")
