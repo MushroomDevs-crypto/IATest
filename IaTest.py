@@ -51,16 +51,18 @@ def generate_chatgpt_response(tweet_text):
         Certifique-se de que sua resposta seja relevante ao texto fornecido.
         """
         response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
+            model="gpt-3.5-turbo",  # Use o modelo correto, como 'gpt-3.5-turbo'
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": tweet_text},
             ],
+            temperature=0.7,  # Ajuste o grau de criatividade
         )
-        return response["choices"][0]["message"]["content"]
+        return response.choices[0].message.content.strip()
     except Exception as e:
         print(f"Erro ao gerar resposta com ChatGPT: {e}")
         return "Desculpe, algo deu errado ao gerar minha resposta."
+
 
 # Função para responder a menções com base no tweet original
 def reply_to_mentions(last_mention_id=None):
