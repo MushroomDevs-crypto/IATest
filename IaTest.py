@@ -1,10 +1,14 @@
 import tweepy
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Substitua pelos seus dados de autenticação
-consumer_key = "TWITTER_API_KEY"
-consumer_secret = "TWITTER_API_SECRET"
-access_token = "TWITTER_ACCESS_TOKEN"
-access_token_secret = "TWITTER_ACCESS_TOKEN_SECRET"
+consumer_key = os.getenv("TWITTER_API_KEY")
+consumer_secret = os.getenv("TWITTER_API_SECRET")
+access_token = os.getenv("TWITTER_ACCESS_TOKEN")
+access_token_secret = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
 
 # Autenticação
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
