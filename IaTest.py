@@ -6,47 +6,52 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Substitua pelos seus dados de autenticação
+bearer_token = os.getenv("TWITTER_BEARER_TOKEN")
 consumer_key = os.getenv("TWITTER_API_KEY")
 consumer_secret = os.getenv("TWITTER_API_SECRET")
 access_token = os.getenv("TWITTER_ACCESS_TOKEN")
 access_token_secret = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
 
-# Autenticação
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-
-# Cria a API
-api = tweepy.API(auth, wait_on_rate_limit=True)
+# Cria o cliente com a API v2
+client = tweepy.Client(
+    bearer_token=bearer_token,
+    consumer_key=consumer_key,
+    consumer_secret=consumer_secret,
+    access_token=access_token,
+    access_token_secret=access_token_secret,
+    wait_on_rate_limit=True,
+)
 
 # Função para responder a menções
 def reply_to_mentions():
-    # Obtém os últimos 20 tweets onde o bot foi mencionado
-    mentions = api.mentions_timeline(count=20, tweet_mode="extended")
+    # Obtém o ID do usuário autenticado
+    user = client.get_me().data
+    user_id = user.id
 
-    for mention in mentions:
-        try:
-            print(f"Respondendo a: {mention.user.screen_name} - {mention.full_text}")
-            
-            # Evita responder a menções já tratadas
-            if mention.favorited:
-                continue
+    # Obtém as últimas 20 menções
+    mentions = client.get_users_mentions(user_id, max_results=20)
 
-            # Responde ao tweet com "Hello World!"
-            api.update_status(
-                status=f"@{mention.user.screen_name} Hello World!",
-                in_reply_to_status_id=mention.id
-            )
+    if mentions.data:
+        for mention in mentions.data:
+            try:
+                print(f"Respondendo a: {mention.text}")
 
-            # Marca o tweet como favorito para evitar duplicação de respostas
-            api.create_favorite(mention.id)
-            print(f"Respondido com sucesso a {mention.user.screen_name}")
+                # Responde ao tweet
+                client.create_tweet(
+                    text=f"@{mention.author_id} Hello World!",
+                    in_reply_to_tweet_id=mention.id,
+                )
 
-        except Exception as e:
-            print(f"Erro ao responder a {mention.user.screen_name}: {e}")
+                print("Resposta enviada com sucesso!")
+            except Exception as e:
+                print(f"Erro ao responder: {e}")
+    else:
+        print("Nenhuma menção encontrada.")
 
-# Executa a função para responder às menções
+# Executa a função
 if __name__ == "__main__":
     print("Bot iniciado. Respondendo às menções...")
     reply_to_mentions()
     print("Execução concluída.")
+
 
