@@ -51,7 +51,7 @@ def generate_chatgpt_response(tweet_text):
         Certifique-se de que sua resposta seja relevante ao texto fornecido.
         """
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": tweet_text},
