@@ -24,29 +24,40 @@ client = tweepy.Client(
 
 # Função para responder a menções
 def reply_to_mentions():
-    # Obtém o ID do usuário autenticado
-    user = client.get_me().data
-    user_id = user.id
+    print("Obtendo ID do usuário...")
+    
+    try:
+        # Obtém o ID do usuário autenticado
+        user = client.get_me().data
+        user_id = user.id
+        print(f"ID do usuário obtido: {user_id}")
+    except Exception as e:
+        print(f"Erro ao obter ID do usuário: {e}")
+        return
+    
+    print("Buscando menções...")
+    try:
+        # Obtém as últimas 20 menções
+        mentions = client.get_users_mentions(user_id, max_results=20)
 
-    # Obtém as últimas 20 menções
-    mentions = client.get_users_mentions(user_id, max_results=20)
-
-    if mentions.data:
-        for mention in mentions.data:
-            try:
-                print(f"Respondendo a: {mention.text}")
-
-                # Responde ao tweet
-                client.create_tweet(
-                    text=f"@{mention.author_id} Hello World!",
-                    in_reply_to_tweet_id=mention.id,
-                )
-
-                print("Resposta enviada com sucesso!")
-            except Exception as e:
-                print(f"Erro ao responder: {e}")
-    else:
-        print("Nenhuma menção encontrada.")
+        if mentions and mentions.data:
+            print(f"{len(mentions.data)} menções encontradas.")
+            
+            for mention in mentions.data:
+                print(f"Menção encontrada: {mention.text}")
+                try:
+                    # Responde ao tweet
+                    client.create_tweet(
+                        text=f"@{mention.author_id} Hello World!",
+                        in_reply_to_tweet_id=mention.id,
+                    )
+                    print(f"Respondido ao tweet {mention.id}.")
+                except Exception as e:
+                    print(f"Erro ao responder ao tweet {mention.id}: {e}")
+        else:
+            print("Nenhuma menção encontrada.")
+    except Exception as e:
+        print(f"Erro ao buscar menções: {e}")
 
 # Executa a função
 if __name__ == "__main__":
