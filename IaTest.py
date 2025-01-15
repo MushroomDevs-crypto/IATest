@@ -1,62 +1,52 @@
 import tweepy
-import time
+import os
 
-# Twitter API credentials
-consumer_key = "YOUR_CONSUMER_KEY"
-consumer_secret = "YOUR_CONSUMER_SECRET"
-access_token = "YOUR_ACCESS_TOKEN"
-access_token_secret = "YOUR_ACCESS_TOKEN_SECRET"
+# Set up API credentials from environment variables
+api_key = os.getenv("API_KEY")
+api_secret = os.getenv("API_SECRET")
+access_token = os.getenv("ACCESS_TOKEN")
+access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
+bearer_token = os.getenv("BEARER_TOKEN")
 
-# Authenticate with Twitter
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-
-# Create API object
-api = tweepy.API(auth, wait_on_rate_limit=True)
-
-# Create Client for v2 endpoints
+# Set up Twitter client
 client = tweepy.Client(
-    consumer_key=consumer_key,
-    consumer_secret=consumer_secret,
+    bearer_token=bearer_token,
+    consumer_key=api_key,
+    consumer_secret=api_secret,
     access_token=access_token,
     access_token_secret=access_token_secret
 )
+
+# Set up OAuth1 authentication for API v1.1
+auth = tweepy.OAuth1UserHandler(
+    api_key, api_secret, access_token, access_token_secret
+)
+api = tweepy.API(auth)
 
 class MyStreamListener(tweepy.StreamingClient):
     def on_tweet(self, tweet):
         try:
             # Get the tweet that mentioned the bot
-            tweet_data = client.get_tweet(
-                tweet.id,
-                expansions=['referenced_tweets']
-            )
+            mentioned_tweet = client.get_tweet(tweet.id)
             
-            # If this tweet is a reply or quote
-            if tweet_data.data.referenced_tweets:
-                # Get the original tweet that was replied to or quoted
-                original_tweet_id = tweet_data.data.referenced_tweets[0].id
-                
-                # Reply to the original tweet
-                client.create_tweet(
-                    text="hello world",
-                    in_reply_to_tweet_id=original_tweet_id
-                )
+            # Reply to the tweet
+            client.create_tweet(
+                text="Hello World",
+                in_reply_to_tweet_id=tweet.id
+            )
         except Exception as e:
             print(f"Error: {e}")
 
 # Initialize stream
-stream = MyStreamListener(bearer_token="YOUR_BEARER_TOKEN")
-
-# Get bot's user ID
-bot_user = client.get_me()
-bot_id = bot_user.data.id
+stream = MyStreamListener(bearer_token)
 
 # Add rule to track mentions
-stream.add_rules(tweepy.StreamRule(f"@{bot_user.data.username}"))
+# Replace USERNAME with your bot's username
+stream.add_rules(tweepy.StreamRule("@Mushroomdevs"))
 
 # Start streaming
-print("Starting stream...")
 stream.filter()
+
 
 
 
