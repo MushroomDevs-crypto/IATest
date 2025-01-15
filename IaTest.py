@@ -26,15 +26,13 @@ client = tweepy.Client(
 # Função para responder a menções
 def reply_to_mentions():
     print("Obtendo ID do usuário...")
+
+    # Obtém o ID do usuário autenticado
+    user = client.get_me().data
+    user_id = user.id
+    print(f"ID do usuário obtido: {user_id}")
     
-    try:
-        # Obtém o ID do usuário autenticado
-        user = client.get_me().data
-        user_id = user.id
-        print(f"ID do usuário obtido: {user_id}")
-    except Exception as e:
-        print(f"Erro ao obter ID do usuário: {e}")
-        return
+   
     
     print("Buscando menções...")
     try:
