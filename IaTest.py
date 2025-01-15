@@ -1,5 +1,6 @@
 import tweepy
 import os
+import time
 from dotenv import load_dotenv
 
 # Carrega variáveis de ambiente
@@ -21,43 +22,29 @@ client = tweepy.Client(
     access_token_secret=access_token_secret,
     wait_on_rate_limit=True,
 )
-
+last_mention_id = None
 # Função para responder a menções
 def reply_to_mentions():
-    print("Obtendo ID do usuário...")
-    
-    try:
-        # Obtém o ID do usuário autenticado
-        user = client.get_me().data
-        user_id = user.id
-        print(f"ID do usuário obtido: {user_id}")
-    except Exception as e:
-        print(f"Erro ao obter ID do usuário: {e}")
-        return
-    
-    print("Buscando menções...")
-    try:
-        # Obtém as últimas 20 menções
-        mentions = client.get_users_mentions(user_id, max_results=1)
+    global last_mention_id
+    user = client.get_me().data
+    user_id = user.id
 
-        if mentions and mentions.data:
-            print(f"{len(mentions.data)} menções encontradas.")
-            
-            for mention in mentions.data:
-                print(f"Menção encontrada: {mention.text}")
-                try:
-                    # Responde ao tweet
-                    client.create_tweet(
-                        text=f"@{mention.author_id} Hello World!",
-                        in_reply_to_tweet_id=mention.id,
-                    )
-                    print(f"Respondido ao tweet {mention.id}.")
-                except Exception as e:
-                    print(f"Erro ao responder ao tweet {mention.id}: {e}")
-        else:
-            print("Nenhuma menção encontrada.")
-    except Exception as e:
-        print(f"Erro ao buscar menções: {e}")
+    mentions = client.get_users_mentions(user_id, since_id=last_mention_id, max_results=20)
+
+    if mentions and mentions.data:
+        for mention in mentions.data:
+            # Responde à menção
+            client.create_tweet(
+                text=f"@{mention.author_id} Hello World!",
+                in_reply_to_tweet_id=mention.id,
+            )
+            print(f"Respondido ao tweet {mention.id}.")
+        
+        # Atualiza o ID do último tweet processado
+        last_mention_id = mentions.data[0].id
+    else:
+        print("Nenhuma menção encontrada.")
+    
 
 # Executa a função
 if __name__ == "__main__":
