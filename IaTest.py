@@ -1,82 +1,52 @@
 import tweepy
-from datetime import datetime, timedelta
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
-import schedule
-import time
 import os
+from time import sleep
 
-# Helpful when testing locally
+# Carregar variáveis de ambiente (ou defina manualmente suas chaves aqui)
 from dotenv import load_dotenv
 load_dotenv()
 
-# Load API keys from environment variables
-TWITTER_API_KEY = os.getenv("TWITTER_API_KEY", "YourKey")
-TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET", "YourKey") 
-TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN", "YourKey")
-TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET", "YourKey")
-TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN", "YourKey")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "YourKey")
+# Configurações do Twitter API
+API_KEY = os.getenv("TWITTER_API_KEY")
+API_SECRET = os.getenv("TWITTER_API_SECRET")
+ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
+ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
 
+# Autenticação no Twitter com OAuth 1.0a
+auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+api = tweepy.API(auth)
 
-
-
-class TwitterBot:
-    def __init__(self):
-        self.twitter_api = tweepy.Client(
-            bearer_token=TWITTER_BEARER_TOKEN,
-            consumer_key=TWITTER_API_KEY,
-            consumer_secret=TWITTER_API_SECRET,
-            access_token=TWITTER_ACCESS_TOKEN,
-            access_token_secret=TWITTER_ACCESS_TOKEN_SECRET,
-            wait_on_rate_limit=True
-        )
-        self.llm = ChatOpenAI(temperature=0.7, openai_api_key=OPENAI_API_KEY, model_name="gpt-3.5-turbo")
-        self.me_id = self.twitter_api.get_me()[0].id
-        self.processed_mentions = set()  # Store processed mention IDs in memory
-
-    def generate_response(self, tweet_text):
-         return "Hello World"
-
-    def handle_mentions(self):
-      
-        # Get only the most recent mention
-        mentions = self.twitter_api.get_users_mentions(
-            id=self.me_id,
-            max_results=1,
-            tweet_fields=['created_at']
-        ).data
-       
-        print(f"Mentions retrieved: {mentions.data if mentions else 'None'}")
-
-        if not mentions:
-            return
-
+def respond_to_mentions():
+    """Responde automaticamente a menções"""
+    try:
+        # Obter menções do usuário autenticado
+        mentions = api.mentions_timeline(count=10, tweet_mode="extended")
+        
         for mention in mentions:
-            # Check if we've already processed this mention
-            if mention.id not in self.processed_mentions:
-                try:
-                    response = self.generate_response(mention.text)
-                    print(f"Generated response: {response}")
-                    self.twitter_api.create_tweet(
-                        text=response,
-                        in_reply_to_tweet_id=mention.id
-                    )
-                    print(f"Successfully replied to mention {mention.id}")
-                    # Add to processed mentions
-                    self.processed_mentions.add(mention.id)
-                    
-                except Exception as e:
-                    print(f"Error handling mention {mention.id}: {str(e)}")
-
-def main():
-    bot = TwitterBot()
-    schedule.every(5).minutes.do(bot.handle_mentions)
+            # Verifica se o bot já respondeu ao tweet
+            if mention.favorited:
+                continue
+            
+            print(f"Respondendo à menção: {mention.user.screen_name} - {mention.full_text}")
+            
+            # Cria a resposta ao tweet
+            response_text = f"@{mention.user.screen_name} Hello World!"
+            api.update_status(status=response_text, in_reply_to_status_id=mention.id)
+            
+            # Marca o tweet como 'favoritado' para evitar responder novamente
+            api.create_favorite(mention.id)
+            print(f"Respondido a {mention.user.screen_name}")
+            
+            # Pausa entre as respostas para evitar limites de taxa
+            sleep(5)
     
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    except tweepy.TweepError as e:
+        print(f"Erro ao responder menções: {e}")
 
 if __name__ == "__main__":
-    main()
+    print("Bot iniciado. Verificando menções...")
+    while True:
+        respond_to_mentions()
+        print("Aguardando antes de verificar novamente...")
+        sleep(60)  # Espera 1 minuto antes de verificar novamente
 
