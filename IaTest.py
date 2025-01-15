@@ -2,6 +2,7 @@ import tweepy
 import os
 from dotenv import load_dotenv
 
+# Carrega variáveis de ambiente
 load_dotenv()
 
 # Substitua pelos seus dados de autenticação
@@ -15,24 +16,37 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 
 # Cria a API
-api = tweepy.API(auth)
+api = tweepy.API(auth, wait_on_rate_limit=True)
 
 # Função para responder a menções
 def reply_to_mentions():
     # Obtém os últimos 20 tweets onde o bot foi mencionado
-    mentions = api.mentions_timeline(count=20)
+    mentions = api.mentions_timeline(count=20, tweet_mode="extended")
 
     for mention in mentions:
-        # Verifica se o tweet ainda não foi respondido
-        if not mention.in_reply_to_status_id:
-            # Responde ao tweet mencionado
+        try:
+            print(f"Respondendo a: {mention.user.screen_name} - {mention.full_text}")
+            
+            # Evita responder a menções já tratadas
+            if mention.favorited:
+                continue
+
+            # Responde ao tweet com "Hello World!"
             api.update_status(
-                status="Hello World",
-                in_reply_to_status_id=mention.id,
-                auto_populate_reply_metadata=True  # Adiciona automaticamente os nomes de usuário mencionados
+                status=f"@{mention.user.screen_name} Hello World!",
+                in_reply_to_status_id=mention.id
             )
-            print(f"Respondido ao tweet de {mention.user.screen_name}")
+
+            # Marca o tweet como favorito para evitar duplicação de respostas
+            api.create_favorite(mention.id)
+            print(f"Respondido com sucesso a {mention.user.screen_name}")
+
+        except Exception as e:
+            print(f"Erro ao responder a {mention.user.screen_name}: {e}")
 
 # Executa a função para responder às menções
-reply_to_mentions()
+if __name__ == "__main__":
+    print("Bot iniciado. Respondendo às menções...")
+    reply_to_mentions()
+    print("Execução concluída.")
 
