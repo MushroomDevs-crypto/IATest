@@ -1,52 +1,34 @@
 import tweepy
-import os
-from time import sleep
 
-# Carregar variáveis de ambiente (ou defina manualmente suas chaves aqui)
-from dotenv import load_dotenv
-load_dotenv()
+# Substitua pelos seus dados de autenticação
+consumer_key = "TWITTER_API_KEY"
+consumer_secret = "TWITTER_API_SECRET"
+access_token = "TWITTER_ACCESS_TOKEN"
+access_token_secret = "TWITTER_ACCESS_TOKEN_SECRET"
 
-# Configurações do Twitter API
-API_KEY = os.getenv("TWITTER_API_KEY")
-API_SECRET = os.getenv("TWITTER_API_SECRET")
-ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
-ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
+# Autenticação
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
 
-# Autenticação no Twitter com OAuth 1.0a
-auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+# Cria a API
 api = tweepy.API(auth)
 
-def respond_to_mentions():
-    """Responde automaticamente a menções"""
-    try:
-        # Obter menções do usuário autenticado
-        mentions = api.mentions_timeline(count=10, tweet_mode="extended")
-        
-        for mention in mentions:
-            # Verifica se o bot já respondeu ao tweet
-            if mention.favorited:
-                continue
-            
-            print(f"Respondendo à menção: {mention.user.screen_name} - {mention.full_text}")
-            
-            # Cria a resposta ao tweet
-            response_text = f"@{mention.user.screen_name} Hello World!"
-            api.update_status(status=response_text, in_reply_to_status_id=mention.id)
-            
-            # Marca o tweet como 'favoritado' para evitar responder novamente
-            api.create_favorite(mention.id)
-            print(f"Respondido a {mention.user.screen_name}")
-            
-            # Pausa entre as respostas para evitar limites de taxa
-            sleep(5)
-    
-    except tweepy.TweepError as e:
-        print(f"Erro ao responder menções: {e}")
+# Função para responder a menções
+def reply_to_mentions():
+    # Obtém os últimos 20 tweets onde o bot foi mencionado
+    mentions = api.mentions_timeline(count=20)
 
-if __name__ == "__main__":
-    print("Bot iniciado. Verificando menções...")
-    while True:
-        respond_to_mentions()
-        print("Aguardando antes de verificar novamente...")
-        sleep(60)  # Espera 1 minuto antes de verificar novamente
+    for mention in mentions:
+        # Verifica se o tweet ainda não foi respondido
+        if not mention.in_reply_to_status_id:
+            # Responde ao tweet mencionado
+            api.update_status(
+                status="Hello World",
+                in_reply_to_status_id=mention.id,
+                auto_populate_reply_metadata=True  # Adiciona automaticamente os nomes de usuário mencionados
+            )
+            print(f"Respondido ao tweet de {mention.user.screen_name}")
+
+# Executa a função para responder às menções
+reply_to_mentions()
 
