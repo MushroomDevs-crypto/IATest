@@ -18,11 +18,10 @@ access_token = os.getenv("TWITTER_ACCESS_TOKEN")
 access_token_secret = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
 bearer_token = os.getenv("TWITTER_BEARER_TOKEN")
 
-# Credenciais da API do ChatGPT (OpenAI)
-openai.api_key = os.getenv("OPENAI_API_KEY")
+
 
 # Autenticação com a API v2
-openai_client = OpenAI()
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 client = tweepy.Client(
     bearer_token=bearer_token,
