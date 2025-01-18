@@ -62,7 +62,7 @@ def generate_chatgpt_response(tweet_text):
             ],
             temperature=0.7,  # Ajustar o grau de criatividade
         )
-        return response.choices[0].message.content.strip()
+        return response['choices'][0]['message']['content'].strip()
     except Exception as e:
         print(f"Erro ao gerar resposta com ChatGPT: {e}")
         return "Desculpe, algo deu errado ao gerar minha resposta."
