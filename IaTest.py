@@ -2,7 +2,11 @@ import tweepy
 import os
 from time import sleep
 import openai
+from openai import OpenAI
+
 from dotenv import load_dotenv
+
+
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -18,6 +22,8 @@ bearer_token = os.getenv("TWITTER_BEARER_TOKEN")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Autenticação com a API v2
+openai_client = OpenAI()
+
 client = tweepy.Client(
     bearer_token=bearer_token,
     consumer_key=consumer_key,
@@ -50,7 +56,7 @@ def generate_chatgpt_response(tweet_text):
 
         Certifique-se de que sua resposta seja relevante ao texto fornecido.
         """
-        response = openai.ChatCompletion.create(
+        response = openai_client.ChatCompletion.create(
             model="gpt-3.5-turbo",  # Use o modelo correto, como 'gpt-3.5-turbo'
             messages=[
                 {"role": "system", "content": system_prompt},
