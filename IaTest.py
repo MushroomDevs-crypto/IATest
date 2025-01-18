@@ -7,7 +7,9 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 
-
+openai_client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY"),  # This is the default and can be omitted
+)
 # Carrega variáveis de ambiente
 load_dotenv()
 
@@ -54,13 +56,13 @@ def generate_chatgpt_response(tweet_text):
 
         Certifique-se de que sua resposta seja relevante ao texto fornecido.
         """
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Modelo a ser usado
+        response = openai_client.chat.completions.create(
+            
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": tweet_text},
             ],
-            temperature=0.7,  # Ajustar o grau de criatividade
+            model="gpt-3.5-turbo",  # Modelo a ser usado
         )
         return response['choices'][0]['message']['content'].strip()
     except Exception as e:
