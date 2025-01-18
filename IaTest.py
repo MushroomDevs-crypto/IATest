@@ -18,10 +18,9 @@ access_token = os.getenv("TWITTER_ACCESS_TOKEN")
 access_token_secret = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
 bearer_token = os.getenv("TWITTER_BEARER_TOKEN")
 
+# Credenciais da API do ChatGPT (OpenAI)
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-
-# Autenticação com a API v2
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 client = tweepy.Client(
     bearer_token=bearer_token,
@@ -55,13 +54,13 @@ def generate_chatgpt_response(tweet_text):
 
         Certifique-se de que sua resposta seja relevante ao texto fornecido.
         """
-        response = openai_client.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Use o modelo correto, como 'gpt-3.5-turbo'
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Modelo a ser usado
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": tweet_text},
             ],
-            temperature=0.7,  # Ajuste o grau de criatividade
+            temperature=0.7,  # Ajustar o grau de criatividade
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
