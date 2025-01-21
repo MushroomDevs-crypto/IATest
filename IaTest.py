@@ -2,7 +2,7 @@ import tweepy
 import os
 from time import sleep
 import openai
-from openai import OpenAI
+
 
 from dotenv import load_dotenv
 
