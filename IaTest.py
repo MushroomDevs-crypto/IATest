@@ -7,9 +7,7 @@ import openai
 from dotenv import load_dotenv
 
 
-openai_client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"),  # This is the default and can be omitted
-)
+openai.api_key = os.getenv("OPENAI_API_KEY")
 # Carrega variáveis de ambiente
 load_dotenv()
 
