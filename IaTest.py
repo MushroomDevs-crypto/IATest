@@ -57,15 +57,15 @@ def generate_chatgpt_response(tweet_text):
 
         Certifique-se de que sua resposta seja relevante ao texto fornecido.
         """
-        response = openai_client.chat.completions.create(
-            
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Modelo a ser usado
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": tweet_text},
             ],
-            model="gpt-3.5-turbo",  # Modelo a ser usado
         )
-        return response['choices'][0]['message']['content'].strip()
+        # Extrai o conteúdo da resposta gerada
+        return response.choices[0].message.content.strip()
     except Exception as e:
         print(f"Erro ao gerar resposta com ChatGPT: {e}")
         return "Desculpe, algo deu errado ao gerar minha resposta."
