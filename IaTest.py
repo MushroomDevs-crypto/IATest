@@ -33,7 +33,7 @@ client = tweepy.Client(
     wait_on_rate_limit=True,
 )
 
-# Teste de billing
+# Teste de billing DOIS
 # Função para obter o ID do usuário autenticado
 def get_user_id():
     try:
