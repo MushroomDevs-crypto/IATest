@@ -53,7 +53,7 @@ def generate_chatgpt_response(tweet_text):
         - Dê uma resposta objetiva e clara.
         - Conclua com uma frase de fechamento amigável.
 
-        Certifique-se de que sua resposta seja relevante ao texto fornecido.
+        Certifique-se de que sua resposta seja relevante ao texto fornecido e que tenha no máximo 280 caracteres.
         """
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",  # Modelo a ser usado
