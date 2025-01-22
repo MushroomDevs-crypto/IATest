@@ -63,7 +63,12 @@ def generate_chatgpt_response(tweet_text):
             ],
         )
         # Extrai o conteúdo da resposta gerada
-        return response.choices[0].message.content.strip()
+        full_response = response.choices[0].message.content.strip()
+        
+        # Trunca a resposta para 280 caracteres, adicionando "..." se necessário
+        if len(full_response) > 280:
+            return full_response[:277] + "..."
+        return full_response
     except Exception as e:
         print(f"Erro ao gerar resposta com ChatGPT: {e}")
         return "Desculpe, algo deu errado ao gerar minha resposta."
