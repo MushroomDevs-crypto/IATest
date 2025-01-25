@@ -75,11 +75,27 @@ def generate_chatgpt_response(tweet_text):
 
 
 # Função para responder a menções com base no tweet original
+def load_responded_ids(file_name="responded_ids.txt"):
+    try:
+        with open(file_name, "r") as file:
+            return set(line.strip() for line in file)
+    except FileNotFoundError:
+        return set()
+
+# Função para salvar um novo ID de tweet respondido
+def save_responded_id(tweet_id, file_name="responded_ids.txt"):
+    with open(file_name, "a") as file:
+        file.write(f"{tweet_id}\n")
+
+# Função para responder a menções com base no tweet original
 def reply_to_mentions(last_mention_id=None):
     user_id = get_user_id()
     if not user_id:
         print("Não foi possível obter o ID do usuário.")
         return
+
+    # Carrega IDs de tweets já respondidos
+    responded_ids = load_responded_ids()
 
     try:
         # Busca menções ao bot desde o último ID processado
@@ -93,6 +109,10 @@ def reply_to_mentions(last_mention_id=None):
         if mentions.data:
             print(f"Encontradas {len(mentions.data)} menções.")
             for mention in mentions.data:
+                if mention.id in responded_ids:
+                    print(f"Menção {mention.id} já foi respondida. Ignorando.")
+                    continue
+
                 referenced_tweet_id = None
 
                 # Verifica se há um tweet referenciado (o tweet original)
@@ -124,6 +144,9 @@ def reply_to_mentions(last_mention_id=None):
                         in_reply_to_tweet_id=mention.id,
                     )
                     print(f"Resposta enviada para o tweet {mention.id}.")
+
+                    # Salva o ID do tweet respondido
+                    save_responded_id(mention.id)
                 except Exception as e:
                     print(f"Erro ao responder ao tweet {mention.id}: {e}")
                 
